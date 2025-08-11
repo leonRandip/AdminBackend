@@ -3,6 +3,41 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { JobsModule } from "./jobs/jobs.module";
 
+// Helper function to parse database URL safely
+function parseDatabaseUrl(databaseUrl: string) {
+  try {
+    // Use URL constructor if available
+    if (typeof URL !== "undefined") {
+      const url = new URL(databaseUrl);
+      return {
+        host: url.hostname,
+        port: url.port ? parseInt(url.port) : 5432, // Default to 5432 if no port specified
+        username: url.username,
+        password: url.password,
+        database: url.pathname.slice(1), // Remove leading slash
+      };
+    } else {
+      // Fallback parsing for environments where URL constructor might not be available
+      const regex = /postgresql:\/\/([^:]+):([^@]+)@([^:]+)(?::(\d+))?\/(.+)/;
+      const match = databaseUrl.match(regex);
+
+      if (match) {
+        return {
+          username: match[1],
+          password: match[2],
+          host: match[3],
+          port: match[4] ? parseInt(match[4]) : 5432, // Default to 5432 if no port specified
+          database: match[5],
+        };
+      }
+      throw new Error("Invalid database URL format");
+    }
+  } catch (error) {
+    console.error("Error parsing DATABASE_URL:", error);
+    throw new Error("Invalid DATABASE_URL format");
+  }
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,20 +56,20 @@ import { JobsModule } from "./jobs/jobs.module";
         if (databaseUrl) {
           try {
             // Parse the DATABASE_URL for production
-            const url = new URL(databaseUrl);
+            const dbConfig = parseDatabaseUrl(databaseUrl);
             console.log(
-              `Connecting to database: ${url.hostname}:${
-                url.port
-              }/${url.pathname.slice(1)}`
+              `Connecting to database: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`
             );
+            console.log(`Username: ${dbConfig.username}`);
+            console.log(`SSL enabled: true`);
 
             return {
               type: "postgres",
-              host: url.hostname,
-              port: parseInt(url.port),
-              username: url.username,
-              password: url.password,
-              database: url.pathname.slice(1), // Remove leading slash
+              host: dbConfig.host,
+              port: dbConfig.port,
+              username: dbConfig.username,
+              password: dbConfig.password,
+              database: dbConfig.database,
               entities: [__dirname + "/**/*.entity{.ts,.js}"],
               synchronize: false, // Disable synchronize in production
               logging: nodeEnv === "development",
@@ -52,6 +87,9 @@ import { JobsModule } from "./jobs/jobs.module";
               retryAttempts: 10,
               retryDelay: 3000,
               keepConnectionAlive: true,
+              connectTimeoutMS: 30000,
+              acquireTimeoutMillis: 30000,
+              idleTimeoutMillis: 30000,
             };
           } catch (error) {
             console.error("Error parsing DATABASE_URL:", error);
