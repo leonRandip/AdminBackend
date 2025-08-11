@@ -50,13 +50,34 @@ function parseDatabaseUrl(databaseUrl: string) {
         const databaseUrl = configService.get("DATABASE_URL");
         const nodeEnv = configService.get("NODE_ENV", "development");
 
+        console.log("=== DATABASE CONNECTION DEBUG ===");
         console.log(`Environment: ${nodeEnv}`);
-        console.log(`Database URL available: ${!!databaseUrl}`);
+        console.log(`DATABASE_URL available: ${!!databaseUrl}`);
+        console.log(
+          `DATABASE_URL length: ${databaseUrl ? databaseUrl.length : 0}`
+        );
 
         if (databaseUrl) {
+          console.log(
+            `DATABASE_URL starts with: ${databaseUrl.substring(0, 20)}...`
+          );
+          console.log(
+            `DATABASE_URL contains 'render.com': ${databaseUrl.includes(
+              "render.com"
+            )}`
+          );
+
           try {
             // Parse the DATABASE_URL for production
             const dbConfig = parseDatabaseUrl(databaseUrl);
+            console.log("Parsed database config:", {
+              host: dbConfig.host,
+              port: dbConfig.port,
+              username: dbConfig.username,
+              password: "****",
+              database: dbConfig.database,
+            });
+
             console.log(
               `Connecting to database: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`
             );
@@ -96,28 +117,60 @@ function parseDatabaseUrl(databaseUrl: string) {
             throw new Error("Invalid DATABASE_URL format");
           }
         } else {
-          console.log("Using individual database environment variables");
-          // Fallback to individual environment variables for development
-          return {
-            type: "postgres",
-            host: configService.get("DB_HOST", "localhost"),
-            port: configService.get("DB_PORT", 5432),
-            username: configService.get("DB_USERNAME", "postgres"),
-            password: configService.get("DB_PASSWORD", "password"),
-            database: configService.get("DB_NAME", "job_management"),
-            entities: [__dirname + "/**/*.entity{.ts,.js}"],
-            synchronize: nodeEnv !== "production",
-            logging: nodeEnv === "development",
-            ssl: false,
-            extra: {
-              connectionLimit: 10,
-              acquireTimeout: 60000,
-              timeout: 60000,
-            },
-            retryAttempts: 10,
-            retryDelay: 3000,
-            keepConnectionAlive: true,
-          };
+          console.log(
+            "DATABASE_URL not found, checking individual environment variables..."
+          );
+          const dbHost = configService.get("DB_HOST");
+          const dbPort = configService.get("DB_PORT");
+          const dbUsername = configService.get("DB_USERNAME");
+          const dbPassword = configService.get("DB_PASSWORD");
+          const dbName = configService.get("DB_NAME");
+
+          console.log("Individual DB variables:", {
+            host: dbHost,
+            port: dbPort,
+            username: dbUsername,
+            password: dbPassword ? "****" : "undefined",
+            database: dbName,
+          });
+
+          if (dbHost && dbUsername && dbPassword && dbName) {
+            console.log("Using individual database environment variables");
+            return {
+              type: "postgres",
+              host: dbHost,
+              port: dbPort || 5432,
+              username: dbUsername,
+              password: dbPassword,
+              database: dbName,
+              entities: [__dirname + "/**/*.entity{.ts,.js}"],
+              synchronize: nodeEnv !== "production",
+              logging: nodeEnv === "development",
+              ssl:
+                nodeEnv === "production"
+                  ? { rejectUnauthorized: false }
+                  : false,
+              extra: {
+                connectionLimit: 10,
+                acquireTimeout: 60000,
+                timeout: 60000,
+              },
+              retryAttempts: 10,
+              retryDelay: 3000,
+              keepConnectionAlive: true,
+            };
+          } else {
+            console.error("No database configuration found!");
+            console.error(
+              "Available environment variables:",
+              Object.keys(process.env).filter(
+                (key) => key.includes("DB") || key.includes("DATABASE")
+              )
+            );
+            throw new Error(
+              "No database configuration found. Please set DATABASE_URL or individual DB_* variables."
+            );
+          }
         }
       },
       inject: [ConfigService],

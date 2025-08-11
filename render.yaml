@@ -14,3 +14,14 @@ services:
         value: https://admin-interface-alpha.vercel.app,http://localhost:3000
       - key: DATABASE_URL
         value: postgresql://job_management_user:Mji3z4zb4gSxzMnSShmNiwfcJVrumb4I@dpg-d2ctl5k9c44c73b2vod0-a.singapore-postgres.render.com/job_management_5mlx
+      # Fallback individual database variables
+      - key: DB_HOST
+        value: dpg-d2ctl5k9c44c73b2vod0-a.singapore-postgres.render.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USERNAME
+        value: job_management_user
+      - key: DB_PASSWORD
+        value: Mji3z4zb4gSxzMnSShmNiwfcJVrumb4I
+      - key: DB_NAME
+        value: job_management_5mlx
