@@ -33,6 +33,16 @@ exports.AppModule = AppModule = __decorate([
                     entities: [__dirname + "/**/*.entity{.ts,.js}"],
                     synchronize: configService.get("NODE_ENV") !== "production",
                     logging: configService.get("NODE_ENV") !== "production",
+                    ssl: configService.get("NODE_ENV") === "production"
+                        ? {
+                            rejectUnauthorized: false,
+                        }
+                        : false,
+                    extra: {
+                        connectionLimit: 10,
+                        acquireTimeout: 60000,
+                        timeout: 60000,
+                    },
                 }),
                 inject: [config_1.ConfigService],
             }),

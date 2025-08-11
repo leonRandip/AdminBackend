@@ -35,6 +35,36 @@ A NestJS backend application for managing job postings with PostgreSQL database.
    # Edit .env with your database credentials
    ```
 
+## Deployment
+
+### Render.com Hosting
+
+This backend is configured for easy deployment on Render.com. See [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md) for detailed deployment instructions.
+
+**Quick Setup:**
+
+1. Push your code to a Git repository
+2. Create a new Web Service on Render.com
+3. Connect your repository
+4. Create a PostgreSQL database service
+5. Deploy!
+
+**Key Features for Render:**
+
+- Automatic SSL configuration for production
+- Environment-based CORS configuration
+- Optimized database connection settings
+- Production-ready build scripts
+
+### Other Platforms
+
+The application can also be deployed to other platforms like:
+
+- Heroku
+- DigitalOcean App Platform
+- Railway
+- AWS Elastic Beanstalk
+
 ## Database Schema
 
 The application will automatically create the following table:

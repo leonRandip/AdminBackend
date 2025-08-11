@@ -6,9 +6,13 @@ import { JobsService } from "./jobs/jobs.service";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for frontend
+  // Enable CORS for frontend - configurable for different environments
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:3000"];
+
   app.enableCors({
-    origin: "http://localhost:3000",
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -21,15 +25,18 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  await app.listen(port, "0.0.0.0"); // Listen on all interfaces for Render
+  console.log(`Application is running on port: ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 
-  // Seed initial data
-  try {
-    const jobsService = app.get(JobsService);
-    await jobsService.seedInitialData();
-  } catch (error) {
-    console.log("Database seeding skipped or failed:", error.message);
+  // Seed initial data only in development
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const jobsService = app.get(JobsService);
+      await jobsService.seedInitialData();
+    } catch (error) {
+      console.log("Database seeding skipped or failed:", error.message);
+    }
   }
 }
 
