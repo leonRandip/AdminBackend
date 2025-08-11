@@ -1,0 +1,73 @@
+### Test Job Management API
+
+# Get all jobs
+GET http://localhost:3001/jobs
+
+###
+
+# Search for developer jobs
+GET http://localhost:3001/jobs?searchQuery=developer
+
+###
+
+# Filter by location
+GET http://localhost:3001/jobs?location=Bangalore
+
+###
+
+# Filter by job type
+GET http://localhost:3001/jobs?jobType=Onsite
+
+###
+
+# Filter by salary range (50k to 100k)
+GET http://localhost:3001/jobs?salaryMin=50&salaryMax=100
+
+###
+
+# Get a specific job
+GET http://localhost:3001/jobs/1
+
+###
+
+# Create a new job
+POST http://localhost:3001/jobs
+Content-Type: application/json
+
+{
+  "title": "Frontend Developer",
+  "company": "Google",
+  "logo": "/google.png",
+  "logoColor": "#4285f4",
+  "experience": "2-5 yr Exp",
+  "workType": "Hybrid",
+  "salary": "25LPA",
+  "timePosted": "12h Ago",
+  "location": "Mountain View",
+  "description": [
+    "Build amazing user interfaces",
+    "Work with cutting-edge technologies"
+  ],
+  "jobType": "Full Time",
+  "salaryMin": 25,
+  "salaryMax": 25,
+  "jobDescription": "Join our team to build the next generation of web applications.",
+  "applicationDeadline": "2024-12-31"
+}
+
+###
+
+# Update a job
+PATCH http://localhost:3001/jobs/1
+Content-Type: application/json
+
+{
+  "salary": "15LPA",
+  "salaryMin": 15,
+  "salaryMax": 15
+}
+
+###
+
+# Delete a job
+DELETE http://localhost:3001/jobs/1
