@@ -23,27 +23,50 @@ exports.AppModule = AppModule = __decorate([
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
-                useFactory: (configService) => ({
-                    type: "postgres",
-                    host: configService.get("DB_HOST", "localhost"),
-                    port: configService.get("DB_PORT", 5432),
-                    username: configService.get("DB_USERNAME", "postgres"),
-                    password: configService.get("DB_PASSWORD", "password"),
-                    database: configService.get("DB_NAME", "job_management"),
-                    entities: [__dirname + "/**/*.entity{.ts,.js}"],
-                    synchronize: configService.get("NODE_ENV") !== "production",
-                    logging: configService.get("NODE_ENV") !== "production",
-                    ssl: configService.get("NODE_ENV") === "production"
-                        ? {
-                            rejectUnauthorized: false,
-                        }
-                        : false,
-                    extra: {
-                        connectionLimit: 10,
-                        acquireTimeout: 60000,
-                        timeout: 60000,
-                    },
-                }),
+                useFactory: (configService) => {
+                    const databaseUrl = configService.get("DATABASE_URL");
+                    if (databaseUrl) {
+                        const url = new URL(databaseUrl);
+                        return {
+                            type: "postgres",
+                            host: url.hostname,
+                            port: parseInt(url.port),
+                            username: url.username,
+                            password: url.password,
+                            database: url.pathname.slice(1),
+                            entities: [__dirname + "/**/*.entity{.ts,.js}"],
+                            synchronize: false,
+                            logging: false,
+                            ssl: {
+                                rejectUnauthorized: false,
+                            },
+                            extra: {
+                                connectionLimit: 10,
+                                acquireTimeout: 60000,
+                                timeout: 60000,
+                            },
+                        };
+                    }
+                    else {
+                        return {
+                            type: "postgres",
+                            host: configService.get("DB_HOST", "localhost"),
+                            port: configService.get("DB_PORT", 5432),
+                            username: configService.get("DB_USERNAME", "postgres"),
+                            password: configService.get("DB_PASSWORD", "password"),
+                            database: configService.get("DB_NAME", "job_management"),
+                            entities: [__dirname + "/**/*.entity{.ts,.js}"],
+                            synchronize: configService.get("NODE_ENV") !== "production",
+                            logging: configService.get("NODE_ENV") !== "production",
+                            ssl: false,
+                            extra: {
+                                connectionLimit: 10,
+                                acquireTimeout: 60000,
+                                timeout: 60000,
+                            },
+                        };
+                    }
+                },
                 inject: [config_1.ConfigService],
             }),
             jobs_module_1.JobsModule,
